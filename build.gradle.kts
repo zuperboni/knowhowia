@@ -25,7 +25,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("MainKt")
+    mainClass.set("com.poc.knowhowia.MainKt")
 }
 tasks.test {
     useJUnitPlatform()
