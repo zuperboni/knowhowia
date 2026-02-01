@@ -1,0 +1,40 @@
+CRASHLYTICS ISSUE
+-----------------
+Title:
+kotlin.UninitializedPropertyAccessException - lateinit property recycler has not been initialized
+
+
+Platform:
+Android
+
+Exception:
+          Fatal Exception: kotlin.UninitializedPropertyAccessException: lateinit property recycler has not been initialized
+       at com.poc.knowhowia.CharactersFragment.onViewCreated(CharactersFragment.kt:44)
+       at androidx.fragment.app.Fragment.performViewCreated(Fragment.java:3147)
+       at androidx.fragment.app.FragmentStateManager.createView(FragmentStateManager.java:588)
+       at androidx.fragment.app.FragmentStateManager.moveToExpectedState(FragmentStateManager.java:272)
+       at androidx.fragment.app.FragmentManager.executeOpsTogether(FragmentManager.java:1943)
+       at androidx.fragment.app.FragmentManager.removeRedundantOperationsAndExecute(FragmentManager.java:1839)
+       at androidx.fragment.app.FragmentManager.execPendingActions(FragmentManager.java:1782)
+       at androidx.fragment.app.FragmentManager.dispatchStateChange(FragmentManager.java:3042)
+       at androidx.fragment.app.FragmentManager.dispatchActivityCreated(FragmentManager.java:2952)
+       at androidx.fragment.app.FragmentController.dispatchActivityCreated(FragmentController.java:263)
+       at androidx.fragment.app.FragmentActivity.onStart(FragmentActivity.java:350)
+       at androidx.appcompat.app.AppCompatActivity.onStart(AppCompatActivity.java:251)
+       at android.app.Instrumentation.callActivityOnStart(Instrumentation.java:1696)
+       at android.app.Activity.performStart(Activity.java:9198)
+       at android.app.ActivityThread.handleStartActivity(ActivityThread.java:4305)
+       at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:214)
+       at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+       at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+       at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+       at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+       at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2823)
+       at android.os.Handler.dispatchMessage(Handler.java:110)
+       at android.os.Looper.loopOnce(Looper.java:248)
+       at android.os.Looper.loop(Looper.java:338)
+       at android.app.ActivityThread.main(ActivityThread.java:9067)
+       at java.lang.reflect.Method.invoke(Method.java)
+       at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:593)
+       at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:932)
+        

@@ -1,0 +1,17 @@
+{
+    "case_id": "case-20260131-180940",
+    "crash_signature": {
+        "exception": "java.lang.IllegalStateException: Fragment should implement AndroidScopeComponent",
+        "top_frames": [
+            "at org.koin.androidx.scope.FragmentExtKt.createFragmentScope(FragmentExt.kt:32)",
+            "at com.poc.knowhowia.CharactersFragment.getScope(CharactersFragment.kt:20)",
+            "at com.poc.knowhowia.CharactersFragment.onViewCreated(CharactersFragment.kt:46)"
+        ]
+    },
+    "problem_summary": "O crash provavelmente ocorreu porque o 'CharactersFragment' não implementava a interface 'AndroidScopeComponent' quando o método 'getScope()' foi chamado durante o ciclo de vida do Fragment, especificamente no método 'onViewCreated'. Isso implica que o escopo do Koin não estava s",
+    "solution_pattern": "A solução adotada foi implementar a interface 'AndroidScopeComponent' no 'CharactersFragment'. Esse padrão garante que o Fragment tenha seu próprio escopo de injeção, mitigando a possibilidade de o método 'getScope()' ser chamado em um estado inválido, pois agora o Fragment está corretamente configurado para interagir com o Koin.",
+    "related_pr": {
+        "url": "https://github.com/zuperboni/knowhowia-android/pull/1",
+        "title": "Title:"
+    }
+}

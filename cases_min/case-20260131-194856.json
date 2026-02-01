@@ -1,0 +1,18 @@
+{
+    "case_id": "case-20260131-194856",
+    "crash_signature": {
+        "exception": "kotlin.UninitializedPropertyAccessException - lateinit property gender has not been initialized",
+        "top_frames": [
+            "io.reactivex.rxjava3.plugins.RxJavaPlugins.onError(RxJavaPlugins.java:372)",
+            "io.reactivex.rxjava3.internal.observers.ConsumerSingleObserver.onSuccess(ConsumerSingleObserver.java:65)",
+            "io.reactivex.rxjava3.internal.operators.single.SingleDoFinally$DoFinallyObserver.onSuccess(SingleDoFinallyObserver.java:73)",
+            "io.reactivex.rxjava3.internal.operators.single.SingleMap$MapSingleObserver.onSuccess(SingleMapSingleObserver.java:65)"
+        ]
+    },
+    "problem_summary": "O crash provavelmente ocorreu devido a o uso da propriedade 'status', que é declarada como 'lateinit', sem que uma instância válida tenha sido atribuída antes da chamada a 'onSuccess' de um observable. Este acesso ocorreu possivelmente no ciclo de vida do fragmento, durante ou ap",
+    "solution_pattern": "O padrão de solução adotado foi garantir a inicialização das variáveis 'lateinit' (status, gender, etc.) no método 'onViewCreated'. Isso garante que todas as propriedades que dependem das views estejam corretamente inicializadas antes de serem usadas, prevenindo assim a exceção de 'UninitializedPropertyAccessException'.",
+    "related_pr": {
+        "url": "https://github.com/zuperboni/knowhowia-android/pull/4",
+        "title": "Title:"
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "crash_signature": {
+        "exception": "Fatal Exception: java.lang.IllegalStateException: Fragment CharacterDetailsFragment{c35d714} not attached to an activity.",
+        "top_frames": [
+            "at androidx.fragment.app.Fragment.requireActivity(Fragment.java:1000)",
+            "at org.koin.androidx.scope.FragmentExtKt.createFragmentScope(FragmentExt.kt:36)",
+            "at com.poc.knowhowia.details.CharacterDetailsFragment.getScope(CharacterDetailsFragment.kt:18)",
+            "at com.poc.knowhowia.details.CharacterDetailsFragment.<init>(CharacterDetailsFragment.kt:25)"
+        ]
+    },
+    "hypothesis": "O crash provavelmente ocorre porque o método 'getScope' é invocado durante a inicialização do 'CharacterDetailsFragment', antes de o fragmento estar anexado à atividade. Isso geralmente acontece quando o fragmento é instanciado de forma prematura, como em um clique de item em uma lista, sem garantir que o fragmento será efetivamente exibido na tela e atrelado ao seu ciclo de vida.",
+    "solution_pattern": "A solução substitui a inicialização imediata do apresentador por uma abordagem de 'lazy initialization'. Isso garante que a instância do presenter só será criada quando realmente necessária, e apenas após a confirmação de que o fragmento está em um estado válido de ciclo de vida (anexado à atividade). Essa abordagem previne a chamada ao método 'requireActivity()' durante a construção, evitando assim o crash.",
+    "pr_evidence": {
+        "files_touched": [
+            "app/src/main/java/com/poc/knowhowia/details/CharacterDetailsFragment.kt"
+        ],
+        "why_related": "O arquivo modificado contém a inicialização do presenter que estava causando o crash. A mudança para 'lazy initialization' altera o tempo em que a instância é criada, evitando o acesso à atividade quando o fragmento não está anexado, o que é diretamente relacionado ao erro apontado."
+    }
+}

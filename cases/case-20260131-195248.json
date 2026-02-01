@@ -1,0 +1,23 @@
+{
+    "crash_signature": {
+        "exception": "kotlin.UninitializedPropertyAccessException - lateinit property gender has not been initialized",
+        "top_frames": [
+            "io.reactivex.rxjava3.plugins.RxJavaPlugins.onError",
+            "io.reactivex.rxjava3.internal.observers.ConsumerSingleObserver.onSuccess",
+            "io.reactivex.rxjava3.internal.operators.single.SingleDoFinally$DoFinallyObserver.onSuccess",
+            "io.reactivex.rxjava3.internal.operators.single.SingleMap$MapSingleObserver.onSuccess",
+            "io.reactivex.rxjava3.internal.operators.single.SingleObserveOn$ObserveOnSingleObserver.run",
+            "android.os.Handler.handleCallback",
+            "android.os.Handler.dispatchMessage",
+            "android.app.ActivityThread.main"
+        ]
+    },
+    "hypothesis": "O crash ocorre devido à tentativa de acessar a propriedade 'gender' antes de sua inicialização, possivelmente dentro do fluxo RxJava antes que a view do Fragment estivesse completamente preparada, levando a um acesso a uma variável 'lateinit' que ainda não foi configurada durante o ciclo de vida. O erro tende a ocorrer após a chamada do método 'onViewCreated', mas antes que o layout seja completamente renderizado e as referências de view estejam disponíveis.",
+    "solution_pattern": "O padrão adotado foi garantir que as referências de interface de usuário, como 'gender', sejam inicializadas no método 'onViewCreated'. Isso assegura que o Fragment tenha completado o processo de criação e que a view associada esteja pronta para interação, prevenindo assim o acesso à variável antes da sua inicialização.",
+    "pr_evidence": {
+        "files_touched": [
+            "app/src/main/java/com/poc/knowhowia/details/CharacterDetailsFragment.kt"
+        ],
+        "why_related": "O arquivo 'CharacterDetailsFragment.kt' contém a implementação do Fragment onde o erro foi disparado. As mudanças feitas no PR garantem que todas as propriedades 'lateinit' sejam inicializadas dentro do método 'onViewCreated', antes de qualquer utilização, prevenindo a exceção que ocorria devido ao acesso de 'gender' antes de sua definição."
+    }
+}

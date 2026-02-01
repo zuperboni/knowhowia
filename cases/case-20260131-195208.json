@@ -1,0 +1,20 @@
+{
+    "crash_signature": {
+        "exception": "kotlin.UninitializedPropertyAccessException - lateinit property species has not been initialized",
+        "top_frames": [
+            "io.reactivex.rxjava3.plugins.RxJavaPlugins.onError(RxJavaPlugins.java:372)",
+            "io.reactivex.rxjava3.internal.observers.ConsumerSingleObserver.onSuccess(ConsumerSingleObserver.java:65)",
+            "io.reactivex.rxjava3.internal.operators.single.SingleDoFinally$DoFinallyObserver.onSuccess(SingleDoFinallyObserver.java:73)",
+            "io.reactivex.rxjava3.internal.operators.single.SingleMap$MapSingleObserver.onSuccess(SingleMapSingleObserver.java:65)",
+            "io.reactivex.rxjava3.internal.operators.single.SingleObserveOn$ObserveOnSingleObserver.run(SingleObserveOnSingleObserver.java:81)"
+        ]
+    },
+    "hypothesis": "O crash pode ter sido causado pela tentativa de acesso à propriedade 'species' antes de sua inicialização no fragmento. Isso provavelmente ocorreu no ciclo de vida do fragmento, especificamente no método 'onViewCreated', onde o fluxo RxJava estava tentando acessar 'species' antes que ela fosse devidamente inicializada com a chamada a 'view.findViewById'",
+    "solution_pattern": "A solução envolve a reordenação do código no método 'onViewCreated', garantindo que as variáveis 'species' e 'gender' sejam inicializadas antes de serem acessadas. Isso previne o acesso a propriedades 'lateinit' não inicializadas, evitando o lançamento de uma exceção de acesso a propriedades não inicializadas.",
+    "pr_evidence": {
+        "files_touched": [
+            "app/src/main/java/com/poc/knowhowia/details/CharacterDetailsFragment.kt"
+        ],
+        "why_related": "O arquivo 'CharacterDetailsFragment.kt' contém o código do método 'onViewCreated', onde as variáveis 'species' e 'gender' estão sendo inicializadas. A correção no PR garante que essas variáveis sejam inicializadas antes de qualquer tentativa de acesso, evitando o crash relacionado ao acesso a propriedades 'lateinit' não inicializadas."
+    }
+}
