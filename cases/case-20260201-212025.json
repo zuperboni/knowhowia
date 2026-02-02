@@ -1,0 +1,18 @@
+{
+    "crash_signature": {
+        "exception": "kotlin.UninitializedPropertyAccessException: lateinit property recycler has not been initialized",
+        "top_frames": [
+            "com.poc.knowhowia.CharactersFragment.onViewCreated(CharactersFragment.kt:44)",
+            "androidx.fragment.app.Fragment.performViewCreated(Fragment.java:3147)",
+            "androidx.fragment.app.FragmentStateManager.createView(FragmentStateManager.java:588)"
+        ]
+    },
+    "hypothesis": "O erro ocorre quando a propriedade 'recycler', declarada como 'lateinit', é acessada no método 'onViewCreated' sem ser devidamente inicializada. Isso provavelmente indica que a inicialização da referência ao RecyclerView não aconteceu antes de seu uso, efetivamente durante o ciclo de vida do Fragment após a chamada para 'super.onViewCreated'.",
+    "solution_pattern": "O padrão de solução adotado consiste na garantida inicialização da variável 'recycler' e outras propriedades do Fragment no método 'onViewCreated'. Ao mover o código de inicialização para esse método, assegura-se que as referências estejam prontas antes de qualquer operação que dependa delas. Isso impede que um acesso a uma propriedade 'lateinit' não inicializada lance a exceção, melhorando a robustez do código.",
+    "pr_evidence": {
+        "files_touched": [
+            "app/src/main/java/com/poc/knowhowia/details/CharacterDetailsFragment.kt"
+        ],
+        "why_related": "O arquivo modificado inclui a correção de referenciamento das propriedades necessárias no método 'onViewCreated', o que diretamente aborda o problema do acesso à variável 'recycler' antes da inicialização. Isso sugere que a alteração foi realizada para evitar o mesmo tipo de instanciação faltante que causou o crash reportado."
+    }
+}
