@@ -1,0 +1,18 @@
+{
+    "case_id": "case-20260201-211238",
+    "crash_signature": {
+        "exception": "kotlin.UninitializedPropertyAccessException: lateinit property recycler has not been initialized",
+        "top_frames": [
+            "com.poc.knowhowia.CharactersFragment.onViewCreated(CharactersFragment.kt:44)",
+            "androidx.fragment.app.Fragment.performViewCreated(Fragment.java:3147)",
+            "androidx.fragment.app.FragmentStateManager.createView(FragmentStateManager.java:588)",
+            "androidx.fragment.app.FragmentStateManager.moveToExpectedState(FragmentStateManager.java:272)"
+        ]
+    },
+    "problem_summary": "O crash foi provavelmente causado pela tentativa de acessar uma propriedade 'lateinit' (neste caso, 'recycler') no método 'onViewCreated' do 'Fragment' antes que essa propriedade tenha sido inicializada. Isso frequentemente ocorre durante a fase de criação do UI no ciclo de vida ",
+    "solution_pattern": "O padrão técnico adotado foi garantir que todas as propriedades 'lateinit' fossem corretamente inicializadas no método 'onViewCreated'. Isso deve prevenir o crash, pois assegura que as referências às views do layout existam antes de serem utilizadas.",
+    "related_pr": {
+        "url": "https://github.com/zuperboni/knowhowia-android/pull/4",
+        "title": "Title:"
+    }
+}

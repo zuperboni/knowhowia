@@ -3,6 +3,7 @@ package com.poc.knowhowia
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -10,20 +11,17 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 import java.io.File
+import java.net.SocketTimeoutException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
-
-private val json = Json {
-    ignoreUnknownKeys = true
-    prettyPrint = true
-    isLenient = true
-}
 
 const val MODEL = "gpt-4o-mini"
 
@@ -71,7 +69,13 @@ data class TextFormat(
     val strict: Boolean,
     val schema: JsonObject
 )
-
+private val jsonConfig = Json {
+    ignoreUnknownKeys = true
+    prettyPrint = true
+    isLenient = true
+    explicitNulls = false
+    encodeDefaults = true
+}
 // ============================
 // Prompts
 // ============================
@@ -185,10 +189,7 @@ fun main(args: Array<String>) = runBlocking {
     }
 
     val mode = (args.firstOrNull() ?: "analyze").lowercase() // analyze | match
-
-    val client = HttpClient(OkHttp) {
-        install(ContentNegotiation) { json(json) }
-    }
+    val client = buildHttpClient()
 
     try {
         when (mode) {
@@ -240,16 +241,17 @@ private suspend fun runAnalyze(client: HttpClient, apiKey: String) {
     )
 
     File("out").mkdirs()
-
-    val raw = createResponseRaw(client, apiKey, request)
+    val raw = retryWithBackoff {
+        createResponseRaw(client, apiKey, request)
+    }
     File("out/response_raw_analyze.json").writeText(raw)
     checkForApiError(raw)
 
     val outputJsonText = extractJsonFromResponses(raw)
     File("out/output_text_analyze.json").writeText(outputJsonText)
 
-    val case = json.decodeFromString(CaseOutput.serializer(), outputJsonText)
-    val prettyCase = json.encodeToString(CaseOutput.serializer(), case)
+    val case = jsonConfig.decodeFromString(CaseOutput.serializer(), outputJsonText)
+    val prettyCase = jsonConfig.encodeToString(CaseOutput.serializer(), case)
 
     println("=== CASE (FULL) ===")
     println(prettyCase)
@@ -263,7 +265,7 @@ private suspend fun runAnalyze(client: HttpClient, apiKey: String) {
     // Deriva o case mínimo (pra busca/chat)
     val relatedPr = extractPrLinkAndTitle(prText)
     val minimal = toMinimalCase(caseId, case, relatedPr)
-    val prettyMin = json.encodeToString(MinimalCase.serializer(), minimal)
+    val prettyMin = jsonConfig.encodeToString(MinimalCase.serializer(), minimal)
 
     File("cases_min").mkdirs()
     File("cases_min/case-$caseId.json").writeText(prettyMin)
@@ -295,7 +297,7 @@ private suspend fun runMatch(client: HttpClient, apiKey: String) {
     val minimalCases = casesDir
         .listFiles { f -> f.isFile && f.extension.lowercase() == "json" }
         ?.sortedBy { it.name }
-        ?.map { file -> json.decodeFromString(MinimalCase.serializer(), file.readText()) }
+        ?.map { file -> jsonConfig.decodeFromString(MinimalCase.serializer(), file.readText()) }
         ?: emptyList()
 
     if (minimalCases.isEmpty()) {
@@ -326,15 +328,17 @@ private suspend fun runMatch(client: HttpClient, apiKey: String) {
 
     File("out").mkdirs()
 
-    val raw = createResponseRaw(client, apiKey, request)
+    val raw = retryWithBackoff {
+        createResponseRaw(client, apiKey, request)
+    }
     File("out/response_raw_match.json").writeText(raw)
     checkForApiError(raw)
 
     val outputJsonText = extractJsonFromResponses(raw)
     File("out/output_text_match.json").writeText(outputJsonText)
 
-    val result = json.decodeFromString(SimilarCasesResult.serializer(), outputJsonText)
-    val pretty = json.encodeToString(SimilarCasesResult.serializer(), result)
+    val result = jsonConfig.decodeFromString(SimilarCasesResult.serializer(), outputJsonText)
+    val pretty = jsonConfig.encodeToString(SimilarCasesResult.serializer(), result)
 
     println("=== SIMILAR CASES ===")
     val chatMessage = formatForChat(result)
@@ -576,4 +580,55 @@ fun extractJsonFromResponses(raw: String): String {
     }
 
     return texts.joinToString("\n").trim()
+}
+
+private fun buildHttpClient(): HttpClient =
+    HttpClient(OkHttp) {
+        install(ContentNegotiation) {
+            json(jsonConfig)
+        }
+        install(HttpTimeout) {
+            // request total (inclui conexão + servidor processar + resposta)
+            requestTimeoutMillis = 240_000  // 4 min
+            // tempo pra conectar
+            connectTimeoutMillis = 30_000   // 30s
+            // tempo esperando dados do servidor (onde seu erro estoura)
+            socketTimeoutMillis = 240_000   // 4 min
+        }
+
+        engine {
+            config {
+                retryOnConnectionFailure(true)
+                connectTimeout(30, TimeUnit.SECONDS)
+                readTimeout(240, TimeUnit.SECONDS)
+                writeTimeout(240, TimeUnit.SECONDS)
+            }
+        }
+    }
+
+private suspend fun <T> retryWithBackoff(
+    maxAttempts: Int = 4,
+    initialDelayMs: Long = 1_000,
+    factor: Double = 2.0,
+    block: suspend () -> T
+): T {
+    var delayMs = initialDelayMs
+    var last: Throwable? = null
+
+    repeat(maxAttempts) { attempt ->
+        try {
+            return block()
+        } catch (e: SocketTimeoutException) {
+            last = e
+        } catch (e: Exception) {
+            // opcional: você pode filtrar aqui só erros de rede/5xx
+            last = e
+        }
+
+        if (attempt < maxAttempts - 1) {
+            delay(delayMs)
+            delayMs = (delayMs * factor).toLong()
+        }
+    }
+    throw last ?: IllegalStateException("retry failed")
 }
